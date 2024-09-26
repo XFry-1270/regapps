@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reg PRIVAT UNMEI</title>
+    <style>
+      textarea {
+        width: 200px;
+        resize: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>Registrasi pengajar Web Privat unmei</h2>
+    <main>
+      <form id="dataForm">
+        <label for="name">Nama:</label><br />
+        <input type="text" id="name" name="name" required /><br />
+
+        <label for="email">Email:</label><br />
+        <input type="email" id="email" name="email" required /><br />
+
+        <label for="phone">No. Telepon:</label><br />
+        <input type="tel" id="phone" name="phone" required /><br />
+        <label for="posibility">Posibility</label><br />
+        <input type="text" id="posibility" name="posibility" />
+        <br />
+
+        <label for="univ">Universitas:</label><br />
+        <input type="text" id="univ" name="univ" required /><br />
+
+        <label for="matkul">Mata kuliah:</label><br />
+        <textarea id="matkul" name="matkul" rows="4" cols="50"></textarea><br />
+
+        <label for="schedule">Jadwal:</label><br />
+        <textarea id="schedule" name="schedule" rows="4" cols="50"></textarea
+        ><br />
+
+        <label for="prestasi">Prestasi:</label><br />
+        <textarea id="prestasi" name="prestasi" rows="4" cols="50"></textarea
+        ><br />
+
+        <label for="photo">Unggah Foto:</label><br />
+        <input
+          type="file"
+          id="photo"
+          name="photo"
+          accept="image/*"
+          required
+        /><br />
+
+        <button type="submit">Kirim</button>
+      </form>
+    </main>
+    <script type="module">
+      // Import Firebase SDK
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        set,
+      } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+      import {
+        getStorage,
+        ref as storageRef,
+        uploadBytes,
+        getDownloadURL,
+      } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js";
+
+      // Konfigurasi Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyA0lPpdvFpyGf1_vlCxm2w50rAtpCxIc_g",
+        authDomain: "proyekver1.firebaseapp.com",
+        databaseURL: "https://proyekver1-default-rtdb.firebaseio.com",
+        projectId: "proyekver1",
+        storageBucket: "proyekver1.appspot.com",
+        messagingSenderId: "797231325267",
+        appId: "1:797231325267:web:6ee3b60f08dd865c2e66a6",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+      const storage = getStorage(app);
+
+      // Handle form submission
+      document
+        .getElementById("dataForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault(); // Mencegah submit default
+
+          const name = document.getElementById("name").value;
+          const email = document.getElementById("email").value;
+          const phone = document.getElementById("phone").value;
+          const univ = document.getElementById("univ").value;
+          const matkul = document.getElementById("matkul").value;
+          const prestasi = document.getElementById("prestasi").value;
+          const photoFile = document.getElementById("photo").files[0];
+          const posibility = document.getElementById("posibility").value;
+          const jadwal = document.getElementById("schedule").value;
+
+          // Generate a unique ID for the data
+          const userId = Date.now();
+
+          // Referensi tempat menyimpan foto di Firebase Storage
+          const photoRef = storageRef(
+            storage,
+            "photos/" + userId + "_" + photoFile.name
+          );
+
+          // Unggah foto ke Firebase Storage
+          uploadBytes(photoRef, photoFile)
+            .then((snapshot) => {
+              // Setelah foto diunggah, dapatkan URL foto tersebut
+              return getDownloadURL(snapshot.ref);
+            })
+            .then((photoURL) => {
+              // Simpan data ke Firebase Realtime Database
+              set(ref(database, "users/" + userId), {
+                name: name,
+                email: email,
+                phone: phone,
+                posibility: posibility,
+                univ: univ,
+                jadwal: jadwal,
+                matkul: matkul,
+                prestasi: prestasi,
+                photoURL: photoURL, // Simpan URL foto di database
+              })
+                .then(() => {
+                  alert("Data dan foto berhasil disimpan!");
+                })
+                .catch((error) => {
+                  alert("Terjadi kesalahan saat menyimpan data");
+                });
+            })
+            .catch((error) => {
+              alert("Terjadi kesalahan saat mengunggah foto");
+            });
+
+          // Reset form setelah submit
+          document.getElementById("dataForm").reset();
+        });
+    </script>
+  </body>
+</html>
